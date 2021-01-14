@@ -53,7 +53,7 @@ Additionally, experimented with various [supersampling](https://en.wikipedia.org
 
 ### Scene 6 (Bonus)
 
-- Created a new 3d shape class (./src/box_complex.h) and experimented with its rotations.
+- Created a new 3d shape class named [box complex](./src/box_complex.h) and experimented with its rotations.
 
 <p align="center">
 <img width="1918" alt="task3_task7_PNG" src="https://user-images.githubusercontent.com/37274614/104494060-008d5200-55e7-11eb-9641-3987bd02cbca.png">
