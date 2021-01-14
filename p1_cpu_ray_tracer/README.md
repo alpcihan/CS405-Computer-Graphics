@@ -51,10 +51,9 @@ Additionally, experimented with various [supersampling](https://en.wikipedia.org
 <img width="636" alt="task6_1PNG" src="https://user-images.githubusercontent.com/37274614/104493973-e0f62980-55e6-11eb-961c-44bf9445258a.png">
 </p>
 
-### Scene 6 
+### Scene 6 (Bonus)
 
-* **Expreiment**
-- Created a new 3d shape class (./src/box_complex.h)and experimented with its rotations.
+- Created a new 3d shape class (./src/box_complex.h) and experimented with its rotations.
 
 <p align="center">
 <img width="1918" alt="task3_task7_PNG" src="https://user-images.githubusercontent.com/37274614/104494060-008d5200-55e7-11eb-9641-3987bd02cbca.png">
