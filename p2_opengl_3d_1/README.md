@@ -47,7 +47,7 @@ User can switch between the scenes by using the keyboard.
 ## Dependencies
 * [KHR](https://www.khronos.org/registry/EGL/api/KHR/khrplatform.h)
 * [GLEW](http://glew.sourceforge.net/)
-* [GLM](https://github.com/glfw/glfw)
+* [GLFW](https://github.com/glfw/glfw)
 * [glm](https://github.com/g-truc/glm)
 
 ## LICENSE
