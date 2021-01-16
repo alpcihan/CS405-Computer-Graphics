@@ -8,7 +8,7 @@ The aim is to escape from two agents that are chasing the player.
 ![mars](https://user-images.githubusercontent.com/37274614/104811200-14190280-580b-11eb-9d71-63f3cac8dd09.gif)
 
 
-## Table of Content
+## Table of content
 * [Controls](#controls)
 * [How to implement spherical movement](#how-to-achieve-spherical-movement)
 * [Dependencies](#dependencies)
