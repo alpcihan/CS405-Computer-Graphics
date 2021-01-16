@@ -1,6 +1,6 @@
 OpenGL 3D Part 2
 =================================
-3D mini-game with 3rd person player control on a spherical world.
+3D mini-game with a 3rd person controller on a spherical world.
 
 The aim is to escape from two agents that are chasing the player.
 
