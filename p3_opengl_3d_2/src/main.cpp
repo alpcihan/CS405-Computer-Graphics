@@ -99,15 +99,16 @@ static void WindowSizeCallback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
-void MoveOnCircle(float a)
+// Move the player on the circle that has got  center = (0,0,0),
+//                                             radius = mars radius
+//                                             plane that up and look vectors are on
+void CircularM(float a)
 {
     float r = Globals.radius;
     
     glm::vec3 up = glm::normalize(Globals.player_position);
     glm::vec3 look = Globals.player_look_at;
-    glm::vec3 right = glm::normalize(glm::cross(up,look)); // TODO: maybe swap the order
-    
-    // right.x*(x - px) + right.y*(y - py) + right.z*(z - pz) = 0
+    glm::vec3 right = glm::normalize(glm::cross(up,look));
     
     glm::vec3 u = glm::normalize(up);
     glm::vec3 v = glm::normalize(look);
@@ -141,7 +142,7 @@ void key_calls(GLFWwindow* window)
     {
         if(!Globals.free)
         {
-            MoveOnCircle(Globals.alpha);
+            CircularM(Globals.alpha);
             Globals.fix += Globals.alpha;
             move = true;
             Globals.start = true;
@@ -153,7 +154,7 @@ void key_calls(GLFWwindow* window)
     {
         if(!Globals.free)
         {
-            MoveOnCircle(-Globals.alpha);
+            CircularM(-Globals.alpha);
             Globals.fix -= Globals.alpha;
             move = true;
             Globals.start = true;
@@ -356,61 +357,13 @@ void load_shader()
     glUseProgram(shader_program); // use shader
 }
 
-float max(float a, float b)
-{
-    return a >= b ? a : b;
-}
-float min(float a, float b)
-{
-    return a <= b ? a : b;
-}
-
-// AABB Collusion check
+// Collusion check by distance
 void CollusionCheck()
 {
-    float r = 1.275;
-    
-    // Player
-    glm::vec3 vec = Globals.player_position + r*Globals.player_look_at;
-    glm::vec3 vec2 = Globals.player_position - r*Globals.player_look_at;
-    float a_max_z = max(vec.z,vec2.z);
-    float a_min_z = min(vec.z,vec2.z);
-    
-    vec = Globals.player_position + r*Globals.player_right;
-    vec2 = Globals.player_position - r*Globals.player_right;
-    float a_max_x = max(vec.x,vec2.x);
-    float a_min_x = min(vec.x,vec2.x);
-    
-    vec = Globals.player_position + r*Globals.player_up;
-    vec2 = Globals.player_position - r*Globals.player_up;
-    float a_max_y = max(vec.y,vec2.y);
-    float a_min_y = min(vec.y,vec2.y);
-    
+    float r = 0.5;
+        
     for(int i = 0; i < Globals.enemy_positions.size(); i++)
     {
-        vec = Globals.enemy_positions[i] + r*Globals.player_look_at;
-        vec2 = Globals.enemy_positions[i] - r*Globals.player_look_at;
-        float b_max_z = max(vec.z,vec2.z);
-        float b_min_z = min(vec.z,vec2.z);
-        
-        vec = Globals.enemy_positions[i] + r*Globals.player_right;
-        vec2 = Globals.enemy_positions[i] - r*Globals.player_right;
-        float b_max_x = max(vec.x,vec2.x);
-        float b_min_x = min(vec.x,vec2.x);
-        
-        vec = Globals.enemy_positions[i] + r*glm::normalize(Globals.enemy_positions[i]);
-        vec2 = Globals.enemy_positions[i] - r*glm::normalize(Globals.enemy_positions[i]);
-        float b_max_y = max(vec.y,vec2.y);
-        float b_min_y = min(vec.y,vec2.y);
-        
-        /*if((a_min_x <= b_max_x && a_max_x >= b_min_x) &&
-        (a_min_z <= b_max_z && a_max_z >= b_min_z) &&
-           (a_min_y <= b_max_y && a_max_y >= b_min_y))
-        {
-            Globals.stop = true;
-            Globals.enemy_stops[i] = true;
-        }*/
-        
         if(glm::length(Globals.enemy_positions[i] - Globals.player_position) < r)
         {
             Globals.stop = true;
@@ -419,96 +372,23 @@ void CollusionCheck()
     }
 }
 
-void Rover(const VAO & sphereVAO, const VAO & donutVAO, const glm::dvec2 & mouse_position)
+void Rover(const VAO & sphereVAO, const glm::dvec2 & mouse_position)
 {
     glm::mat4 transform(1);
-    
-    /*std::cout <<"Player:" << Globals.player_position.x << " "  << Globals.player_position.y << " " << Globals.player_position.z << " " << std::endl;
-    std::cout <<"Up:" << Globals.player_up.x << " "  << Globals.player_up.y << " " << Globals.player_up.z << " " << std::endl;
-    std::cout <<"Look:" << Globals.player_look_at.x << " "  << Globals.player_look_at.y << " " << Globals.player_look_at.z << " " << std::endl;
-    std::cout <<"Right:" << Globals.player_right.x << " "  << Globals.player_right.y << " " << Globals.player_right.z << " " << std::endl << std::endl;*/
-    
+
     // Body
 
     transform = glm::translate(transform, Globals.player_position*1.05f);
-    
-    //transform = glm::rotate(transform, Globals.fix, Globals.player_right);
-
     transform = glm::scale(transform, glm::vec3(0.2));
     
     glBindTexture(GL_TEXTURE_2D, Globals.textures[2]);
-    
     glBindVertexArray(sphereVAO.id);
-    
     glUniformMatrix4fv(Globals.u_model_location, 1, GL_FALSE, glm::value_ptr(transform));
-    
     glDrawElements(GL_TRIANGLES, sphereVAO.element_array_count, GL_UNSIGNED_INT, NULL);
-    
-    
-    // Wheel 1
-    
-    transform = glm::mat4(1);
-
-    transform = glm::translate(transform, Globals.player_position*1.05f + 0.5f*glm::rotate(Globals.player_right,45.f,Globals.player_up));
-
-    transform = glm::rotate(transform, glm::degrees(90.f), Globals.player_position);
-    transform = glm::rotate(transform, Globals.fix, Globals.player_right);
-
-    
-    transform = glm::scale(transform, glm::vec3(0.2));
-    
-    glBindTexture(GL_TEXTURE_2D, Globals.textures[1]);
-    glBindVertexArray(donutVAO.id);
-    glUniformMatrix4fv(Globals.u_model_location, 1, GL_FALSE, glm::value_ptr(transform));
-    glDrawElements(GL_TRIANGLES, donutVAO.element_array_count, GL_UNSIGNED_INT, NULL);
-    
-    // Wheel 2
-    transform = glm::mat4(1);
-    
-    transform = glm::translate(transform, Globals.player_position*1.05f + 0.5f*glm::rotate(-Globals.player_right,45.f,Globals.player_up));
-    transform = glm::rotate(transform, glm::degrees(90.f), Globals.player_position);
-    transform = glm::rotate(transform, Globals.fix, Globals.player_right);
-    
-    transform = glm::scale(transform, glm::vec3(0.2));
-    
-    glBindTexture(GL_TEXTURE_2D, Globals.textures[1]);
-    glBindVertexArray(donutVAO.id);
-    glUniformMatrix4fv(Globals.u_model_location, 1, GL_FALSE, glm::value_ptr(transform));
-    glDrawElements(GL_TRIANGLES, donutVAO.element_array_count, GL_UNSIGNED_INT, NULL);
-    
-    // Wheel 3
-    transform = glm::mat4(1);
-    
-    transform = glm::translate(transform, Globals.player_position*1.05f + 0.5f*glm::rotate(-Globals.player_right,45.f,-Globals.player_up));
-    transform = glm::rotate(transform, glm::degrees(90.f), Globals.player_position);
-    transform = glm::rotate(transform, Globals.fix, Globals.player_right);
-    
-    transform = glm::scale(transform, glm::vec3(0.2));
-    
-    glBindTexture(GL_TEXTURE_2D, Globals.textures[1]);
-    glBindVertexArray(donutVAO.id);
-    glUniformMatrix4fv(Globals.u_model_location, 1, GL_FALSE, glm::value_ptr(transform));
-    glDrawElements(GL_TRIANGLES, donutVAO.element_array_count, GL_UNSIGNED_INT, NULL);
-    
-    // Wheel 3
-       transform = glm::mat4(1);
-       
-       transform = glm::translate(transform, Globals.player_position*1.05f + 0.5f*glm::rotate(Globals.player_right,45.f,-Globals.player_up));
-       transform = glm::rotate(transform, glm::degrees(90.f), Globals.player_position);
-       transform = glm::rotate(transform, Globals.fix, Globals.player_right);
-       
-       transform = glm::scale(transform, glm::vec3(0.2));
-       
-       glBindTexture(GL_TEXTURE_2D, Globals.textures[1]);
-       glBindVertexArray(donutVAO.id);
-       glUniformMatrix4fv(Globals.u_model_location, 1, GL_FALSE, glm::value_ptr(transform));
-       glDrawElements(GL_TRIANGLES, donutVAO.element_array_count, GL_UNSIGNED_INT, NULL);
-     
 }
 
-void Enemy(const VAO & sphereVAO, const VAO & donutVAO, const int i)
+void Enemy(const VAO & sphereVAO, const int i)
 {
-
     // Chase the player on spherical surface
     if(!Globals.enemy_stops[i])
     {
@@ -529,72 +409,13 @@ void Enemy(const VAO & sphereVAO, const VAO & donutVAO, const int i)
     glm::mat4 transform(1);
     
     transform = glm::translate(transform, Globals.enemy_positions[i]);
-    //transform = glm::rotate(transform, float(Globals.rot), glm::vec3(0,0,1));
     transform = glm::scale(transform, glm::vec3(0.2));
     
     glBindTexture(GL_TEXTURE_2D, Globals.textures[2]);
     
     glBindVertexArray(sphereVAO.id);
     glUniformMatrix4fv(Globals.u_model_location, 1, GL_FALSE, glm::value_ptr(transform));
-    glDrawElements(GL_TRIANGLES, donutVAO.element_array_count, GL_UNSIGNED_INT, NULL);
-    
-    
-    // Wheel 1
-    
-    transform = glm::mat4(1);
-
-    transform = glm::translate(transform, Globals.enemy_positions[i]*1.05f + 0.4f*glm::rotate(Globals.player_right,45.f,Globals.enemy_positions[i]));
-    transform = glm::rotate(transform, glm::degrees(90.f), Globals.enemy_positions[i]);
-    transform = glm::rotate(transform, Globals.fix, Globals.player_right);
-    
-    transform = glm::scale(transform, glm::vec3(0.2));
-    
-    glBindTexture(GL_TEXTURE_2D, Globals.textures[1]);
-    glBindVertexArray(donutVAO.id);
-    glUniformMatrix4fv(Globals.u_model_location, 1, GL_FALSE, glm::value_ptr(transform));
-    glDrawElements(GL_TRIANGLES, donutVAO.element_array_count, GL_UNSIGNED_INT, NULL);
-    
-    // Wheel 2
-    transform = glm::mat4(1);
-    
-    transform = glm::translate(transform, Globals.enemy_positions[i]*1.05f + 0.4f*glm::rotate(-Globals.player_right,45.f,Globals.enemy_positions[i]));
-    transform = glm::rotate(transform, glm::degrees(90.f), Globals.enemy_positions[i]);
-    transform = glm::rotate(transform, Globals.fix, Globals.player_right);
-    
-    transform = glm::scale(transform, glm::vec3(0.2));
-    
-    glBindTexture(GL_TEXTURE_2D, Globals.textures[1]);
-    glBindVertexArray(donutVAO.id);
-    glUniformMatrix4fv(Globals.u_model_location, 1, GL_FALSE, glm::value_ptr(transform));
-    glDrawElements(GL_TRIANGLES, donutVAO.element_array_count, GL_UNSIGNED_INT, NULL);
-    
-    // Wheel 3
-    transform = glm::mat4(1);
-    
-    transform = glm::translate(transform, Globals.enemy_positions[i]*1.05f + 0.4f*glm::rotate(-Globals.player_right,45.f,-Globals.enemy_positions[i]));
-    transform = glm::rotate(transform, glm::degrees(90.f), Globals.enemy_positions[i]);
-    transform = glm::rotate(transform, Globals.fix, Globals.player_right);
-    
-    transform = glm::scale(transform, glm::vec3(0.2));
-    
-    glBindTexture(GL_TEXTURE_2D, Globals.textures[1]);
-    glBindVertexArray(donutVAO.id);
-    glUniformMatrix4fv(Globals.u_model_location, 1, GL_FALSE, glm::value_ptr(transform));
-    glDrawElements(GL_TRIANGLES, donutVAO.element_array_count, GL_UNSIGNED_INT, NULL);
-    
-    // Wheel 3
-       transform = glm::mat4(1);
-       
-       transform = glm::translate(transform, Globals.enemy_positions[i]*1.05f + 0.4f*glm::rotate(Globals.player_right,45.f,-Globals.enemy_positions[i]));
-       transform = glm::rotate(transform, glm::degrees(90.f), Globals.enemy_positions[i]);
-       transform = glm::rotate(transform, Globals.fix, Globals.player_right);
-       
-       transform = glm::scale(transform, glm::vec3(0.2));
-       
-       glBindTexture(GL_TEXTURE_2D, Globals.textures[1]);
-       glBindVertexArray(donutVAO.id);
-       glUniformMatrix4fv(Globals.u_model_location, 1, GL_FALSE, glm::value_ptr(transform));
-       glDrawElements(GL_TRIANGLES, donutVAO.element_array_count, GL_UNSIGNED_INT, NULL);
+    glDrawElements(GL_TRIANGLES, sphereVAO.element_array_count, GL_UNSIGNED_INT, NULL);
 }
 
 void Mars(const VAO & shapeVAO)
@@ -605,15 +426,12 @@ void Mars(const VAO & shapeVAO)
     transform = glm::scale(transform, glm::vec3(Globals.radius));
     
     glBindVertexArray(shapeVAO.id);
-    
     glBindTexture(GL_TEXTURE_2D, Globals.textures[0]);
-    
     glUniformMatrix4fv(Globals.u_model_location, 1, GL_FALSE, glm::value_ptr(transform));
-    
     glDrawElements(GL_TRIANGLES, shapeVAO.element_array_count, GL_UNSIGNED_INT, NULL);
 }
 
-void Scene(const VAO & sphereVAO,const VAO & donutVAO, const glm::dvec2 & mouse_position, glm::dvec3 & chasing_pos)
+void Scene(const VAO & sphereVAO, const glm::dvec2 & mouse_position, glm::dvec3 & chasing_pos)
 {
     // Camera Control
     glm::vec3 lookAt;
@@ -651,17 +469,16 @@ void Scene(const VAO & sphereVAO,const VAO & donutVAO, const glm::dvec2 & mouse_
     
     // Objects
     Mars(sphereVAO);
-    
-    Rover(sphereVAO, donutVAO, mouse_position);
+    Rover(sphereVAO, mouse_position);
     
     if(Globals.start == true)
     {
-        Enemy(sphereVAO, donutVAO, 0);
+        Enemy(sphereVAO, 0);
         
-        Enemy(sphereVAO, donutVAO, 1);
+        Enemy(sphereVAO, 1);
     }
     
-    // AABB Collusion Check
+    // Collusion Check
     CollusionCheck();
     
     if(!Globals.free)
@@ -672,7 +489,6 @@ void Scene(const VAO & sphereVAO,const VAO & donutVAO, const glm::dvec2 & mouse_
         Globals.player_right = right;
     }
 }
-
 
 int main(int argc, char* argv[])
 {
@@ -739,17 +555,11 @@ int main(int argc, char* argv[])
     VAO sphereVAO(positions, normals, uvs, indices);
     {positions.clear();normals.clear();indices.clear();} // clear the attributes
     
-    GenerateParametricShapeFrom2D(positions, normals, uvs, indices, ParametricCircle, 64, 64);
-    VAO donutVAO(positions, normals, uvs, indices);
-    {positions.clear();normals.clear();indices.clear();} // clear the attributes
-    
-    
-    
     // Shader Temp
     load_shader();
     
     glm::dvec3 chase_position = glm::dvec3(0,0,0);
-    MoveOnCircle(Globals.alpha);
+    CircularM(Globals.alpha);
     Globals.fix += Globals.alpha;
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -769,7 +579,7 @@ int main(int argc, char* argv[])
         key_calls(window);
         
         // Scene
-        Scene(sphereVAO, donutVAO, mouse_position, chase_position);
+        Scene(sphereVAO, mouse_position, chase_position);
         
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
