@@ -2,11 +2,9 @@ OpenGL 3D Part 2
 =================================
 3D mini-game with a 3rd person controller on a spherical world.
 
-The aim is to escape from two agents that are chasing the player.
-
+The aim is to escape from the two agents that are chasing the player.
 
 ![mars](https://user-images.githubusercontent.com/37274614/104811200-14190280-580b-11eb-9d71-63f3cac8dd09.gif)
-
 
 ## Table of content
 * [Controls](#controls)
